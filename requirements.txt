@@ -5,5 +5,5 @@ PyMySQL>=1.1,<2
 pypdf>=6,<7
 Pillow>=12,<13
 reportlab>=4.4,<5
-python-dotenv>=1,<2
+python-dotenv>=1.2.3,<2
 Werkzeug>=3.1,<4
