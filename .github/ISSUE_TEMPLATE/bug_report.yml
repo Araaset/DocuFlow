@@ -1,0 +1,35 @@
+name: Сообщить об ошибке
+description: Воспроизводимая проблема в DocuFlow
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Не прикладывайте пароли, `.env`, базы данных и личные документы.
+  - type: textarea
+    id: description
+    attributes:
+      label: Что произошло?
+      description: Опишите ожидаемое и фактическое поведение.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Шаги воспроизведения
+      placeholder: "1. Открыть…\n2. Нажать…\n3. Увидеть…"
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Система и версия Python
+      placeholder: Windows 11, Python 3.14
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Безопасный фрагмент ошибки
+      render: shell
+
