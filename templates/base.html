@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="{{ active_language }}" data-theme="{{ current_user.theme if current_user.is_authenticated else 'system' }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0b1020">
+  <title>{% block title %}DocuFlow{% endblock %}</title>
+  <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="{{ url_for('static', filename='app.js') }}" defer></script>
+</head>
+<body class="{{ 'compact' if current_user.is_authenticated and current_user.compact_mode }}">
+{% if current_user.is_authenticated %}
+  <div class="mobile-bar"><a class="mobile-logo" href="{{ url_for('main.dashboard') }}"><span>D</span>DocuFlow</a><button class="icon-btn" type="button" aria-label="Открыть меню" data-menu-toggle>☰</button></div>
+  <aside class="sidebar" data-sidebar>
+    <div class="sidebar-head"><a class="brand" href="{{ url_for('main.dashboard') }}"><span class="brand-mark">D</span><span>DocuFlow<small>DOCUMENT OS</small></span></a><button class="icon-btn sidebar-close" type="button" aria-label="Закрыть меню" data-menu-toggle>×</button></div>
+    <nav class="main-nav">
+      <small class="nav-label">WORKSPACE</small>
+      <a class="{{ 'active' if request.endpoint == 'main.dashboard' and request.args.get('scope') != 'favorites' }}" href="{{ url_for('main.dashboard') }}"><span class="nav-icon">▦</span><span>{{ t('documents') }}</span></a>
+      <a class="{{ 'active' if request.endpoint == 'main.dashboard' and request.args.get('scope') == 'favorites' }}" href="{{ url_for('main.dashboard', scope='favorites') }}"><span class="nav-icon">☆</span><span>Избранное</span></a>
+      <a class="{{ 'active' if request.endpoint == 'main.tools' }}" href="{{ url_for('main.tools') }}"><span class="nav-icon">⌁</span><span>{{ t('tools') }}</span><em>6</em></a>
+      <a class="{{ 'active' if request.endpoint == 'main.history' }}" href="{{ url_for('main.history') }}"><span class="nav-icon">◷</span><span>{{ t('history') }}</span></a>
+      <a class="{{ 'active' if request.endpoint == 'main.trash' }}" href="{{ url_for('main.trash') }}"><span class="nav-icon">♲</span><span>Корзина</span></a>
+      {% if current_user.role == 'admin' %}<small class="nav-label admin-label">CONTROL</small><a class="{{ 'active' if request.endpoint in ['main.admin','main.admin_user'] }}" href="{{ url_for('main.admin') }}"><span class="nav-icon">◇</span><span>{{ t('admin') }}</span><i></i></a>{% endif %}
+    </nav>
+    <div class="storage-widget"><div><span>Хранилище</span><a href="{{ url_for('main.profile') }}">Настроить</a></div><div class="mini-progress"><i></i></div><small>Ваши файлы защищены и доступны только вам</small></div>
+    <div class="profile-menu">
+      <a class="profile-link {{ 'active' if request.endpoint == 'main.profile' }}" href="{{ url_for('main.profile') }}"><span class="avatar">{{ current_user.name[:1]|upper }}</span><span><b>{{ current_user.name }}</b><small>{{ current_user.role }}</small></span><i>›</i></a>
+      <div class="profile-actions"><div class="langs" aria-label="{{ t('language') }}">{% for code in ['ru','kk','en'] %}<form method="post" action="{{ url_for('main.language', language=code) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="{{ 'selected' if active_language == code }}">{{ code|upper }}</button></form>{% endfor %}</div><form method="post" action="{{ url_for('auth.logout') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="logout-btn" title="{{ t('logout') }}">↗</button></form></div>
+    </div>
+  </aside>
+  <div class="sidebar-backdrop" data-menu-toggle></div>
+{% endif %}
+<main class="app-main {% if not current_user.is_authenticated %}auth-main{% endif %}">
+  <div class="flash-stack">{% with messages=get_flashed_messages(with_categories=true) %}{% for category,message in messages %}<div class="toast {{ category }}" role="status"><span>{{ '✓' if category == 'success' else '!' }}</span><p>{{ message }}</p><button type="button" data-dismiss>×</button></div>{% endfor %}{% endwith %}</div>
+  {% block content %}{% endblock %}
+</main>
+</body>
+</html>
+
