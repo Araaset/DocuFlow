@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %}{{ t('login') }} — DocuFlow{% endblock %}
+{% block content %}
+<section class="auth-shell">
+  <div class="auth-story"><span class="spark">✦</span><h2>Files, finally<br>in flow.</h2><p>Private document management and PDF tools in one calm workspace.</p><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div></div>
+  <div class="auth-card">
+    <a class="auth-logo" href="{{ url_for('auth.login') }}"><span>D</span> DocuFlow</a>
+    <h1>{{ t('login_title') }}</h1><p>{{ t('login_intro') }}</p>
+    <form method="post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label>{{ t('email') }}<input type="email" name="email" required maxlength="255" autocomplete="email" placeholder="you@example.com"></label>
+      <label>{{ t('password') }}<input type="password" name="password" required maxlength="128" autocomplete="current-password" placeholder="••••••••"></label>
+      <label class="check"><input type="checkbox" name="remember"><span>{{ t('remember') }}</span></label>
+      <button class="primary full">{{ t('login') }} <span>→</span></button>
+    </form>
+    <p class="auth-switch">{{ t('no_account') }} <a href="{{ url_for('auth.register') }}">{{ t('register') }}</a></p>
+  </div>
+</section>
+{% endblock %}
+
+
