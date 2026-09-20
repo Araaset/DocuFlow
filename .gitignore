@@ -1,0 +1,14 @@
+.env
+.venv/
+.docuflow-requirements
+__pycache__/
+*.py[cod]
+uploads/*
+!uploads/.gitkeep
+docuflow.db
+instance/
+.coverage
+.pytest_cache/
+.qa/
+.idea/
+.vscode/
