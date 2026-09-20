@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% macro pdf_picker(empty='Сначала загрузите PDF в библиотеку') %}
+  <div class="file-picker single">
+    {% for doc in documents if doc.original_name.lower().endswith('.pdf') %}
+      <label class="picker-row"><input type="radio" name="document_ids" value="{{ doc.id }}"><span class="picker-file">PDF</span><span><b>{{ doc.original_name }}</b><small>{{ doc.page_count or '?' }} стр. · {{ format_size(doc.size) }}</small></span><i>✓</i></label>
+    {% else %}<div class="picker-empty">{{ empty }}</div>{% endfor %}
+  </div>
+{% endmacro %}
+{% block content %}
+<header class="topbar">
+  <div><div class="breadcrumb">WORKSPACE <span>/</span> PDF STUDIO</div><h1>PDF Studio</h1><p>Шесть инструментов в одном аккуратном рабочем пространстве.</p></div>
+  <a class="btn btn-secondary btn-md" href="{{ url_for('main.dashboard') }}">← Библиотека</a>
+</header>
+<nav class="tool-tabs" aria-label="PDF tools">
+  <a class="{{ 'active' if mode == 'merge' }}" href="{{ url_for('main.tools', mode='merge') }}"><span>⊕</span>Склеить</a>
+  <a class="{{ 'active' if mode == 'split' }}" href="{{ url_for('main.tools', mode='split') }}"><span>↔</span>Разделить</a>
+  <a class="{{ 'active' if mode == 'image' }}" href="{{ url_for('main.tools', mode='image') }}"><span>▧</span>Изображения</a>
+  <a class="{{ 'active' if mode == 'rotate' }}" href="{{ url_for('main.tools', mode='rotate') }}"><span>↻</span>Повернуть</a>
+  <a class="{{ 'active' if mode == 'compress' }}" href="{{ url_for('main.tools', mode='compress') }}"><span>⇲</span>Сжать</a>
+  <a class="{{ 'active' if mode == 'watermark' }}" href="{{ url_for('main.tools', mode='watermark') }}"><span>◈</span>Водяной знак</a>
+</nav>
+
+<section class="studio-shell">
+  <div class="studio-workspace">
+  {% if mode == 'merge' %}
+    <form method="post" class="studio-form" data-selection-form data-min="2">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="action" value="merge">
+      <div class="studio-title"><span class="tool-symbol purple">⊕</span><div><span class="step">01 · MERGE</span><h2>Склеить PDF</h2><p>Выберите файлы и перетащите карточки в нужном порядке.</p></div></div>
+      <div class="file-picker" data-sortable>{% for doc in documents if doc.original_name.lower().endswith('.pdf') %}<label class="picker-row" draggable="true"><input type="checkbox" name="document_ids" value="{{ doc.id }}"><span class="drag-handle">⠿</span><span class="picker-file">PDF</span><span><b>{{ doc.original_name }}</b><small>{{ doc.page_count or '?' }} стр. · {{ format_size(doc.size) }}</small></span><i>✓</i></label>{% else %}<div class="picker-empty">Загрузите минимум два PDF в библиотеку</div>{% endfor %}</div>
+      <label class="field output-field"><span>Название результата</span><div><input name="output_name" value="merged-document" maxlength="180"><em>.pdf</em></div></label>
+      <div class="studio-submit"><span>Выбрано: <b data-selected-count>0</b></span><button class="btn btn-primary btn-lg" disabled data-submit-button>Склеить PDF <span>→</span></button></div>
+    </form>
+  {% elif mode == 'split' %}
+    <form method="post" class="studio-form" data-selection-form data-min="1" data-max="1">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="action" value="split">
+      <div class="studio-title"><span class="tool-symbol mint">↔</span><div><span class="step">02 · EXTRACT</span><h2>Извлечь страницы</h2><p>Можно указать один или несколько диапазонов страниц.</p></div></div>
+      {{ pdf_picker() }}
+      <label class="field"><span>Страницы</span><input name="ranges" placeholder="Например: 1-3, 5, 8-10" required><small>Диапазоны можно разделять запятыми</small></label>
+      <div class="studio-submit"><span>Новый PDF сохранится в библиотеке</span><button class="btn btn-primary btn-lg" disabled data-submit-button>Извлечь страницы <span>→</span></button></div>
+    </form>
+  {% elif mode == 'image' %}
+    <form method="post" class="studio-form" data-selection-form data-min="1">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="action" value="image">
+      <div class="studio-title"><span class="tool-symbol orange">▧</span><div><span class="step">03 · IMAGE TO PDF</span><h2>Изображения в PDF</h2><p>Соберите несколько PNG/JPG в один документ.</p></div></div>
+      <div class="file-picker" data-sortable>{% for doc in documents if doc.original_name.lower().endswith(('.png','.jpg','.jpeg')) %}<label class="picker-row" draggable="true"><input type="checkbox" name="document_ids" value="{{ doc.id }}"><span class="drag-handle">⠿</span><span class="picker-file image">IMG</span><span><b>{{ doc.original_name }}</b><small>{{ format_size(doc.size) }}</small></span><i>✓</i></label>{% else %}<div class="picker-empty">Сначала загрузите PNG или JPG в библиотеку</div>{% endfor %}</div>
+      <div class="field-row"><label class="field"><span>Размер страницы</span><select name="page_size"><option value="original">Исходный</option><option value="a4">A4 с полями</option></select></label><label class="field"><span>Название</span><input name="output_name" value="images-document" maxlength="180"></label></div>
+      <div class="studio-submit"><span>Выбрано: <b data-selected-count>0</b></span><button class="btn btn-primary btn-lg" disabled data-submit-button>Создать PDF <span>→</span></button></div>
+    </form>
+  {% elif mode == 'rotate' %}
+    <form method="post" class="studio-form" data-selection-form data-min="1" data-max="1">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="action" value="rotate">
+      <div class="studio-title"><span class="tool-symbol blue">↻</span><div><span class="step">04 · ROTATE</span><h2>Повернуть PDF</h2><p>Поворот применяется ко всем страницам документа.</p></div></div>
+      {{ pdf_picker() }}
+      <div class="angle-picker"><label><input type="radio" name="angle" value="90" checked><span>↻<b>90°</b></span></label><label><input type="radio" name="angle" value="180"><span>↻<b>180°</b></span></label><label><input type="radio" name="angle" value="270"><span>↺<b>270°</b></span></label></div>
+      <div class="studio-submit"><span>Исходный файл останется без изменений</span><button class="btn btn-primary btn-lg" disabled data-submit-button>Повернуть <span>→</span></button></div>
+    </form>
+  {% elif mode == 'watermark' %}
+    <form method="post" class="studio-form" data-selection-form data-min="1" data-max="1">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="action" value="watermark">
+      <div class="studio-title"><span class="tool-symbol purple">◈</span><div><span class="step">06 · PROTECT</span><h2>Водяной знак</h2><p>Добавьте диагональную надпись и нумерацию ко всем страницам.</p></div></div>
+      {{ pdf_picker() }}
+      <div class="field-row"><label class="field"><span>Текст</span><input name="watermark_text" value="КОНФИДЕНЦИАЛЬНО" maxlength="80"></label><label class="field"><span>Прозрачность</span><select name="opacity"><option value="35">Лёгкая</option><option value="55" selected>Средняя</option><option value="85">Заметная</option></select></label></div>
+      <label class="switch-row"><span><b>Нумеровать страницы</b><small>Добавить «1 / N» в нижней части листа</small></span><input type="checkbox" name="page_numbers"><i></i></label>
+      <div class="studio-submit"><span>Поддерживается русский и казахский текст</span><button class="btn btn-primary btn-lg" disabled data-submit-button>Добавить знак <span>→</span></button></div>
+    </form>
+  {% else %}
+    <form method="post" class="studio-form" data-selection-form data-min="1" data-max="1">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="action" value="compress">
+      <div class="studio-title"><span class="tool-symbol pink">⇲</span><div><span class="step">05 · OPTIMIZE</span><h2>Сжать PDF</h2><p>Оптимизация структуры и повторяющихся объектов документа.</p></div></div>
+      {{ pdf_picker() }}
+      <div class="info-banner"><span>i</span><p>Результат зависит от структуры PDF. Изображения не теряют исходное качество.</p></div>
+      <div class="studio-submit"><span>Исходный файл останется без изменений</span><button class="btn btn-primary btn-lg" disabled data-submit-button>Оптимизировать <span>→</span></button></div>
+    </form>
+  {% endif %}
+  </div>
+  <aside class="studio-aside"><div class="studio-preview"><div class="preview-paper"><span>DOCUFLOW</span><i></i><i></i><i></i><b>{{ {'merge':'MERGED','split':'PAGES','image':'IMAGES','rotate':'ROTATED','compress':'COMPACT','watermark':'PROTECTED'}.get(mode, 'COMPACT') }}</b></div></div><h3>Как это работает</h3><ol><li><span>1</span>Выберите документы</li><li><span>2</span>Настройте результат</li><li><span>3</span>Запустите обработку</li></ol><p class="privacy-note">◇ Файлы обрабатываются в вашем приватном пространстве.</p></aside>
+</section>
+{% endblock %}
+
